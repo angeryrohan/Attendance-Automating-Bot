@@ -17,7 +17,7 @@ When the time comes, it runs the required python file which logs you into your m
 
 -> So You'd run a shell script anytime before the class timing <br>
 -> The script would start waiting for  " 8:00  AM " <br>
--> When the time comes, the shell script runs a python file that opens the "Physics" tab and joins into the meeting. (Because different python files are allocated to different subjects.)
+-> When the time comes, the shell script runs a python file that opens the "Physics" tab and joins into the meeting. (Because different python files are allocated to different subjects.)<br>
 -> Then the bot sleeps for ```<Class Duration>``` (you can set this in the python code files) and then exits the meeting.
   
   

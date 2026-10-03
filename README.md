@@ -1,25 +1,101 @@
-# What is AttendanceBot MS Teams?
-One click = 100% online attendance (unless you're being called in your class! Ratz!) <br>
-<b>This is made using python, + selenium and shell scripts.</b>
-<br>
-You execute one shell script, and never turn off your PC. the "master" shell script detects current time and date, then waits for the upcoming lecture time.
-When the time comes, it runs the required python file which logs you into your meeting & exits it when its over, then the bot starts waiting for the next one. <br>
-<i><b>This process keeps repeating itself...</b></i>
+# AttendanceBot for MS Teams
 
-# Understanding how it all works:
+One click = 100% online attendance (unless you're being called in your class! Ratz!)
+Built with **Python + Selenium + shell scripts**.
 
--> You need to have a fixed schedule/Time table of your lectures which is repeatitive.<br>
--> Role of python files: click on buttons etc, fill in input boxes etc.<br> That's how you join into your meetings!<br><br><i> Note: Difference python files open up different meetings, this is something that you'd have to set on your own.<br> Example: "physicsTHE.py" opens up the physics theory lecture meeting tab</i><br><br>
--> Role of BASH files: detect current time and date, and execute specific python files according to the timetable and subject.<br>
+Run one script, leave your PC on, and the bot joins every lecture in your timetable, leaves when it ends, then waits for the next one. Repeats forever.
 
+## How it works
 
-# Example: A class of Physics is at 8:00 in the morning
+```
+master.sh  →  checks today's day  →  monday.sh / tuesday.sh / ...
+day.sh     →  waits for the next class time  →  runs that subject's .py
+subject.py →  logs into Teams, opens the team, clicks Join, waits, hangs up
+           →  back to master.sh for the next class
+```
 
--> So You'd run a shell script anytime before the class timing <br>
--> The script would start waiting for  " 8:00  AM " <br>
--> When the time comes, the shell script runs a python file that opens the "Physics" tab and joins into the meeting. (Because different python files are allocated to different subjects.)<br>
--> Then the bot sleeps for ```<Class Duration>``` (you can set this in the python code files) and then exits the meeting.
-  
-  
- # Awesome, how do I use it for myself?
- **Video To be uploaded**
+| File | Job |
+|---|---|
+| `master.sh` | Picks the right day script |
+| `monday.sh` … `friday.sh` | Your timetable: class times + which `.py` to run |
+| `physicsTHE.py`, `mathLAB.py`, … | One per subject. Opens that subject's team and joins the meeting |
+
+## Requirements
+
+- Google Chrome
+- Python 3 + pip
+- Bash with GNU `date`: **Linux** or **Git Bash on Windows** (macOS `date` won't work)
+
+## Setup (step by step)
+
+**1. Clone the repo**
+```bash
+git clone https://github.com/angeryrohan/Attendance-Automating-Bot.git
+cd Attendance-Automating-Bot
+```
+
+**2. Install the dependencies**
+```bash
+pip install "selenium<4" webdriver-manager
+```
+> The code uses the Selenium 3 API, so `selenium<4` is required.
+
+**3. Add your login to every `.py` file**
+```python
+emailBox.send_keys('MY EMAIL')   # ← your college email
+passBox.send_keys('MY PASS')     # ← your password
+```
+
+**4. Point each `.py` file to its team**
+
+Every `.py` file clicks one team card by its position:
+```python
+driver.find_elements_by_class_name('team-card')[2].click()
+```
+Count your cards in Teams **left → right, top → bottom, starting at 0** (see `ORDER.jpg`).
+Example: if Physics is the 6th card, use `[5]` in `physicsTHE.py`.
+
+**5. Set how long each class lasts** (in seconds)
+```python
+time.sleep(3300)   # 55 min, then the bot hangs up
+```
+
+**6. Write your timetable in `monday.sh` … `friday.sh`**
+```bash
+classOne=$(date -d "08:00" +%s)   # class time (24h)
+...
+python pythonLAB.py               # file to run at that time
+```
+Change the times, the `.py` names and the `echo` labels to match your week.
+
+**7. Make the scripts executable**
+```bash
+chmod +x *.sh
+```
+
+## Run it
+
+```bash
+./master.sh
+```
+Leave the terminal open and your PC awake (turn off sleep mode). That's it.
+
+**Test one subject first:**
+```bash
+python physicsTHE.py
+```
+Chrome should open, log in, open the team and join the call.
+
+## Adding a new subject
+
+1. Copy any `.py` file → `chemistryTHE.py`
+2. Change the team-card number (step 4) and the class length (step 5)
+3. Call it from the right day script
+
+## Good to know
+
+- Classes must be **meetings started inside the team's channel**, because the bot clicks the channel's **Join** button.
+- Accounts with **2-step verification / MFA** won't log in automatically.
+- Saturday and Sunday run `friday.sh`.
+- If Teams changes its layout, the XPaths in the `.py` files may need updating.
+- Your password is stored as plain text, so **don't commit it** to a public repo.
